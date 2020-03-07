@@ -31,3 +31,5 @@ case class COMMA() extends ExpressionToken
 case class INDENT() extends ExpressionToken
 
 case class DEDENT() extends ExpressionToken
+
+case class AS() extends ExpressionToken

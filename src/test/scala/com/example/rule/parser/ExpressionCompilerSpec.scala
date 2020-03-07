@@ -18,7 +18,7 @@ class ExpressionCompilerSpec extends AnyFlatSpec with Matchers {
       |    call service "B"
       |    switch:
       |      name == "unknown" ->
-      |        exit
+      |       exit
       |      otherwise ->
       |        call service "C"
       |        exit
@@ -68,4 +68,13 @@ class ExpressionCompilerSpec extends AnyFlatSpec with Matchers {
     ExpressionCompiler(invalidCode) shouldBe Left(errorMsg)
   }
 
+  it should "simple column" in {
+    ExpressionCompiler("deposit_col") shouldBe Right(MyColumn("deposit_col"))
+  }
+
+
+  it should "column as alias" in {
+    ExpressionCompiler("deposit_col as alias_name") shouldBe
+      Right(ASColumn(MyColumn("deposit_col"), "alias_name"))
+  }
 }

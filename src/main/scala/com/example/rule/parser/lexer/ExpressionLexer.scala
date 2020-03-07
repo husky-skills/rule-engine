@@ -18,7 +18,7 @@ object ExpressionLexer extends RegexParsers {
 
   def tokens: Parser[List[ExpressionToken]] = {
     phrase(rep1(exit | readInput | callService | switch | otherwise | colon | arrow
-      | equals | comma | literal | identifier | indentation)) ^^ { rawTokens =>
+      | equals | comma | literal | identifier | indentation | as)) ^^ { rawTokens =>
       processIndentations(rawTokens)
     }
   }
@@ -106,6 +106,10 @@ object ExpressionLexer extends RegexParsers {
 
   def comma = positioned {
     "," ^^ (_ => COMMA())
+  }
+
+  def as = positioned {
+    "as" ^^ (_ => AS())
   }
 
 }
