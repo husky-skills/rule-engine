@@ -26,6 +26,12 @@ case class ANDColumn(right: ExpressionAST) extends ExpressionAST
 
 case class ORColumn(right: ExpressionAST) extends ExpressionAST
 
+case class BETWEENColumn(start: ExpressionAST, end: ExpressionAST) extends ExpressionAST
+
+case class INColumn(items: List[ExpressionAST]) extends ExpressionAST
+
+case class COMMAColumn(right: ExpressionAST) extends ExpressionAST
+
 //===============================================
 
 

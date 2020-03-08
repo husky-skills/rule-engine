@@ -32,12 +32,14 @@ object ExpressionParser extends Parsers {
 
   def program: Parser[ExpressionAST] = positioned {
     phrase(expression)
-//    phrase(block)
+    //    phrase(block)
   }
 
 
   def expression: Parser[ExpressionAST] = positioned {
-    rep1(or | and | as | cast | column) ^^ { case expList =>
+    rep1(
+      in | between |
+        or | and | as | cast | column | commaColumn) ^^ { case expList =>
       expList reduceLeft AndThen
     }
   }
@@ -86,6 +88,24 @@ object ExpressionParser extends Parsers {
   def or: Parser[ORColumn] = positioned {
     OR() ~ column ^^ {
       case _ ~ right => ORColumn(right)
+    }
+  }
+
+  def in: Parser[INColumn] = positioned {
+    (IN() ~ LEFTPAR() ~ rep1sep(column, COMMA())) ~ RIGHTPAR() ^^ {
+      case _ ~ _ ~ list ~ _ => INColumn(list)
+    }
+  }
+
+  def between: Parser[BETWEENColumn] = positioned {
+    (BETWEEN() ~ LEFTPAR() ~ column ~ COMMA() ~ column ~ RIGHTPAR()) ^^ {
+      case _ ~ _ ~ start ~ _ ~ end ~ _ => BETWEENColumn(start, end)
+    }
+  }
+
+  def commaColumn: Parser[COMMAColumn] = positioned {
+    (COMMA() ~ identifier) ^^ {
+      case _ ~ IDENTIFIER(name) => COMMAColumn(MyColumn(name))
     }
   }
 

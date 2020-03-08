@@ -26,6 +26,14 @@ case class ARROW() extends ExpressionToken
 
 case class EQUALS() extends ExpressionToken
 
+case class BETWEEN() extends ExpressionToken
+
+case class LEFTPAR() extends ExpressionToken
+
+case class RIGHTPAR() extends ExpressionToken
+
+case class IN() extends ExpressionToken
+
 case class COMMA() extends ExpressionToken
 
 case class INDENT() extends ExpressionToken
@@ -40,4 +48,3 @@ case class AND() extends ExpressionToken
 
 case class OR() extends ExpressionToken
 
-//case class COLL() extends ExpressionToken

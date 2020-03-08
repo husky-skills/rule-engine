@@ -18,16 +18,17 @@ object ExpressionLexer extends RegexParsers {
 
   def tokens: Parser[List[ExpressionToken]] = {
     phrase(rep1(
-//      exit
-        //      | readInput | callService
-         as | cast | and | or
+      //      exit
+      //      | readInput | callService
+      as | cast | and | or
+        | between | in | comma | leftPar | rightPar
         //      | switch | otherwise | colon | arrow
         //      | equals | comma
         | literal | identifier
-//        | indentation
+      //        | indentation
     )) ^^ { rawTokens =>
-            rawTokens
-//      processIndentations(rawTokens)
+      rawTokens
+      //      processIndentations(rawTokens)
     }
   }
 
@@ -63,7 +64,9 @@ object ExpressionLexer extends RegexParsers {
   }
 
   def identifier: Parser[IDENTIFIER] = positioned {
-    "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
+    //    "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
+    //  todo: remove identifier starting with numbers
+    "[a-zA-Z0-9_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
   }
 
   def literal: Parser[LITERAL] = positioned {
@@ -110,6 +113,22 @@ object ExpressionLexer extends RegexParsers {
 
   def equals = positioned {
     "==" ^^ (_ => EQUALS())
+  }
+
+  def between = positioned {
+    "between" ^^ (_ => BETWEEN())
+  }
+
+  def in = positioned {
+    "in" ^^ (_ => IN())
+  }
+
+  def leftPar = positioned {
+    "(" ^^ (_ => LEFTPAR())
+  }
+
+  def rightPar = positioned {
+    ")" ^^ (_ => RIGHTPAR())
   }
 
   def comma = positioned {
