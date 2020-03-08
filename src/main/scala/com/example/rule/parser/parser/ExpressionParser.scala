@@ -33,8 +33,15 @@ object ExpressionParser extends Parsers {
     phrase(block)
   }
 
+  def expression: Parser[ExpressionAST] = positioned {
+    or | and | as | column
+  }
+
   def block: Parser[ExpressionAST] = positioned {
-    rep1(statement) ^^ { case stmtList: List[ExpressionAST] => stmtList reduceRight AndThen }
+    rep1(statement) ^^ { case stmtList: List[ExpressionAST] =>
+      println(stmtList)
+      stmtList reduceRight AndThen
+    }
   }
 
   def statement: Parser[ExpressionAST] = positioned {
@@ -49,15 +56,25 @@ object ExpressionParser extends Parsers {
       case _ ~ _ ~ _ ~ ifs ~ otherwise ~ _ => Choice(ifs ++ otherwise)
     }
 
-
-     column | exit | readInput | callService | switch
+    or | and | as | column | exit | readInput | callService | switch
 
   }
 
-
   def as: Parser[ASColumn] = positioned {
-    (column ~ AS() ~ identifier) ^^ {
+    column ~ AS() ~ identifier ^^ {
       case column ~ as ~ IDENTIFIER(name) => ASColumn(column, name)
+    }
+  }
+
+  def and: Parser[ANDColumn] = positioned {
+    (column ~ AND() ~ column) ^^ {
+      case left ~ and ~ right => ANDColumn(left, right)
+    }
+  }
+
+  def or: Parser[ORColumn] = positioned {
+    (column ~ OR() ~ column) ^^ {
+      case left ~ or ~ right => ORColumn(left, right)
     }
   }
 
@@ -71,7 +88,6 @@ object ExpressionParser extends Parsers {
     accept("identifier", { case IDENTIFIER(name) => MyColumn(name) })
   }
 
-
   def otherwiseThen: Parser[OtherwiseThen] = positioned {
     (OTHERWISE() ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
       case _ ~ _ ~ _ ~ block ~ _ => parser.OtherwiseThen(block)
@@ -83,7 +99,6 @@ object ExpressionParser extends Parsers {
       case IDENTIFIER(id) ~ eq ~ LITERAL(lit) => Equals(id, lit)
     }
   }
-
 
   private def identifier: Parser[IDENTIFIER] = positioned {
     accept("identifier", { case id@IDENTIFIER(name) => id })

@@ -17,8 +17,11 @@ object ExpressionLexer extends RegexParsers {
   }
 
   def tokens: Parser[List[ExpressionToken]] = {
-    phrase(rep1(exit | readInput | callService | switch | otherwise | colon | arrow
-      | equals | comma | literal | identifier | indentation | as)) ^^ { rawTokens =>
+    phrase(rep1(exit | readInput | callService
+      | as | cast | and | or
+      | switch | otherwise | colon | arrow
+      | equals | comma
+      | literal | identifier | indentation)) ^^ { rawTokens =>
       processIndentations(rawTokens)
     }
   }
@@ -112,4 +115,15 @@ object ExpressionLexer extends RegexParsers {
     "as" ^^ (_ => AS())
   }
 
+  def cast = positioned {
+    "cast" ^^ (_ => CAST())
+  }
+
+  def and = positioned {
+    "&&" ^^ (_ => AND())
+  }
+
+  def or = positioned {
+    "||" ^^ (_ => OR())
+  }
 }

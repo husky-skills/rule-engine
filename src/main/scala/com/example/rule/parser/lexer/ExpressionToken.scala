@@ -33,3 +33,9 @@ case class INDENT() extends ExpressionToken
 case class DEDENT() extends ExpressionToken
 
 case class AS() extends ExpressionToken
+
+case class CAST() extends ExpressionToken
+
+case class AND() extends ExpressionToken
+
+case class OR() extends ExpressionToken

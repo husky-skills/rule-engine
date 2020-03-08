@@ -18,14 +18,13 @@ case object Exit extends ExpressionAST
 
 case class MyColumn(name: String) extends ExpressionAST
 
-//case class ASColumn(column: MyColumn, name: String) extends ExpressionAST
+case class ASColumn(thenBlock: ExpressionAST, alias: String) extends ExpressionAST
 
-sealed trait ASThen1 extends Positional {
-  def thenBlock: ExpressionAST
-}
+case class CASTColumn(left: ExpressionAST, `type`: String) extends ExpressionAST
 
-case class ASThen(name:AS1,thenBlock:ExpressionAST) extends ASThen1
-case class ASColumn(thenBlock: ExpressionAST, alias: String) extends AS1
+case class ANDColumn(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
+
+case class ORColumn(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
 
 //===============================================
 
@@ -39,6 +38,5 @@ case class IfThen(predicate: Condition, thenBlock: ExpressionAST) extends Condit
 case class OtherwiseThen(thenBlock: ExpressionAST) extends ConditionThen
 
 sealed trait Condition extends Positional
-sealed trait AS1 extends Positional
 
 case class Equals(factName: String, factValue: String) extends Condition
