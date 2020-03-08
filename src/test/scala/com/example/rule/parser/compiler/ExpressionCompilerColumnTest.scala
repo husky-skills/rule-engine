@@ -104,7 +104,14 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
-  test("between (10 , 20) without any column should fail") {}
+  test("between (10 , 20) without any column should fail") {
+    pending
+    val testName = "between (10 , 20)"
+    val ast = ExpressionCompiler(testName)
+    val expect = BETWEENColumn(MyColumn("10"), MyColumn("20"))
+    if (ast.isLeft) println(ast.left.get.toString)
+    assert(ast.toOption === Some(expect))
+  }
 
   test("col1 between (10, 20), col2 as alis") {
     val testName = "col1 between (10, 20), col2 as alis"
