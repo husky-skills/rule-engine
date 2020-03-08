@@ -1,6 +1,6 @@
 package com.example.rule.parser.compiler
 
-import com.example.rule.parser.parser.{ANDColumn, ASColumn, CASTColumn, MyColumn, ORColumn}
+import com.example.rule.parser.parser._
 import org.scalatest.matchers.must.Matchers
 
 class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers {
@@ -8,17 +8,23 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
   test("col1 as alias") {
     val testName = "col1 as alias"
     val ast = ExpressionCompiler(testName)
-    val expect = ASColumn(MyColumn("col1"), "alias")
-    assert(ast.right.get === expect)
+    val expect = AndThen(MyColumn("col1"), ASColumn("alias"))
+    if (ast.isLeft) println(ast.left.get.toString)
+    assert(ast.toOption === Some(expect))
   }
   test("col1 cast boolean") {
     val testName = "col1 cast boolean"
     val ast = ExpressionCompiler(testName)
-    val expect = CASTColumn(MyColumn("col1"), "boolean")
+    val expect = AndThen(MyColumn("col1"), CASTColumn("boolean"))
   }
-  test("let(100) as alias") {
-    val testName = "let(100) as alias"
+  test("let 100 be alias") {
+    val testName = "let 100 be alias"
   }
+
+  test("alias be 100") {
+    val testName = "alias be 100"
+  }
+
   test("let(0100) as alias cast boolean") {
     val testName = "let(0100) as alias cast boolean"
   }
@@ -31,12 +37,12 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val testName = "col1"
     val ast = ExpressionCompiler(testName)
     val expect = MyColumn(testName)
-    assert(ast.right.get === expect)
+    assert(ast.toOption === Some(expect))
   }
   test("col1 && col2") {
     val testName = "col1 && col2"
     val ast = ExpressionCompiler(testName)
-    val expect = ANDColumn(MyColumn("col1"), MyColumn("col2"))
+    val expect = AndThen(MyColumn("col1"), ANDColumn(MyColumn("col2")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
@@ -44,7 +50,7 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
   test("col1 || col2") {
     val testName = "col1 || col2"
     val ast = ExpressionCompiler(testName)
-    val expect = ORColumn(MyColumn("col1"), MyColumn("col2"))
+    val expect = AndThen(MyColumn("col1"), ORColumn(MyColumn("col2")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
@@ -58,21 +64,25 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
   test("col1 && col2 || col3") {
     val testName = "col1 && col2 || col3"
     val ast = ExpressionCompiler(testName)
-    val expect = ORColumn(ANDColumn(MyColumn("col1"), MyColumn("col2")), MyColumn("col3"))
+    val expect = AndThen(AndThen(MyColumn("col1"), ANDColumn(MyColumn("col2"))), ORColumn(MyColumn("col3")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
   test("col1 && col2 && col3") {
     val testName = "col1 && col2 && col3"
     val ast = ExpressionCompiler(testName)
-    val expect = ANDColumn(ANDColumn(MyColumn("col1"), MyColumn("col2")), MyColumn("col3"))
+    val expect = AndThen(AndThen(MyColumn("col1"), ANDColumn(MyColumn("col2"))), ANDColumn(MyColumn("col3")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
   test("col1 as alias cast boolean && col2") {
     val testName = "col1 as alias cast boolean && col2"
     val ast = ExpressionCompiler(testName)
-    val expect = ORColumn(MyColumn("col1"), MyColumn("col2"))
+    val expect = AndThen(AndThen(AndThen(
+      MyColumn("col1"),
+      ASColumn("alias")),
+      CASTColumn("boolean")),
+      ANDColumn(MyColumn("col2")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }

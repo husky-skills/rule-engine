@@ -18,13 +18,13 @@ case object Exit extends ExpressionAST
 
 case class MyColumn(name: String) extends ExpressionAST
 
-case class ASColumn(thenBlock: ExpressionAST, alias: String) extends ExpressionAST
+case class ASColumn(alias: String) extends ExpressionAST
 
-case class CASTColumn(left: ExpressionAST, `type`: String) extends ExpressionAST
+case class CASTColumn(`type`: String) extends ExpressionAST
 
-case class ANDColumn(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
+case class ANDColumn(right: ExpressionAST) extends ExpressionAST
 
-case class ORColumn(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
+case class ORColumn(right: ExpressionAST) extends ExpressionAST
 
 //===============================================
 

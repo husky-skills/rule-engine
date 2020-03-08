@@ -22,7 +22,6 @@ class LoadConfigurationTest extends org.scalatest.FunSuite {
         case Left(value: ConfigReaderFailures) => Nil
         case Right(value) => value.rules
       }
-
    assert(res.head.name === "rule1")
   }
 }

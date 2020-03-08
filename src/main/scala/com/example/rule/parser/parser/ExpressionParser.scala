@@ -22,7 +22,8 @@ object ExpressionParser extends Parsers {
 
 
   def apply(tokens: Seq[ExpressionToken]): Either[ExpressionParserError, ExpressionAST] = {
-    val reader = new ExpressionTokenReader(tokens)
+    println(s"#### received tokens #####${tokens}")
+    val reader: ExpressionTokenReader = new ExpressionTokenReader(tokens)
     program(reader) match {
       case NoSuccess(msg, next) => Left(ExpressionParserError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => Right(result)
@@ -30,11 +31,15 @@ object ExpressionParser extends Parsers {
   }
 
   def program: Parser[ExpressionAST] = positioned {
-    phrase(block)
+    phrase(expression)
+//    phrase(block)
   }
 
+
   def expression: Parser[ExpressionAST] = positioned {
-    or | and | as | column
+    rep1(or | and | as | cast | column) ^^ { case expList =>
+      expList reduceLeft AndThen
+    }
   }
 
   def block: Parser[ExpressionAST] = positioned {
@@ -60,21 +65,27 @@ object ExpressionParser extends Parsers {
 
   }
 
-  def as: Parser[ASColumn] = positioned {
-    column ~ AS() ~ identifier ^^ {
-      case column ~ as ~ IDENTIFIER(name) => ASColumn(column, name)
+  def as: Parser[ExpressionAST] = positioned {
+    AS() ~ identifier ^^ {
+      case _ ~ IDENTIFIER(name) => ASColumn(name)
     }
   }
 
-  def and: Parser[ANDColumn] = positioned {
-    (column ~ AND() ~ column) ^^ {
-      case left ~ and ~ right => ANDColumn(left, right)
+  def cast: Parser[ExpressionAST] = positioned {
+    CAST() ~ identifier ^^ {
+      case _ ~ IDENTIFIER(name) => CASTColumn(name)
+    }
+  }
+
+  def and: Parser[ExpressionAST] = positioned {
+    AND() ~ column ^^ {
+      case _ ~ right => ANDColumn(right)
     }
   }
 
   def or: Parser[ORColumn] = positioned {
-    (column ~ OR() ~ column) ^^ {
-      case left ~ or ~ right => ORColumn(left, right)
+    OR() ~ column ^^ {
+      case _ ~ right => ORColumn(right)
     }
   }
 
@@ -84,13 +95,15 @@ object ExpressionParser extends Parsers {
     }
   }
 
-  def column: Parser[MyColumn] = positioned {
-    accept("identifier", { case IDENTIFIER(name) => MyColumn(name) })
+  def column: Parser[ExpressionAST] = positioned {
+    accept("identifier", {
+      case IDENTIFIER(name) => MyColumn(name)
+    })
   }
 
   def otherwiseThen: Parser[OtherwiseThen] = positioned {
     (OTHERWISE() ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
-      case _ ~ _ ~ _ ~ block ~ _ => parser.OtherwiseThen(block)
+      case _ ~ _ ~ _ ~ block ~ _ => OtherwiseThen(block)
     }
   }
 

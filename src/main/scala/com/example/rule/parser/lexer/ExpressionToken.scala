@@ -39,3 +39,5 @@ case class CAST() extends ExpressionToken
 case class AND() extends ExpressionToken
 
 case class OR() extends ExpressionToken
+
+//case class COLL() extends ExpressionToken

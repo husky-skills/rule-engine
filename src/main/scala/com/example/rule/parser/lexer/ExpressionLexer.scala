@@ -17,12 +17,17 @@ object ExpressionLexer extends RegexParsers {
   }
 
   def tokens: Parser[List[ExpressionToken]] = {
-    phrase(rep1(exit | readInput | callService
-      | as | cast | and | or
-      | switch | otherwise | colon | arrow
-      | equals | comma
-      | literal | identifier | indentation)) ^^ { rawTokens =>
-      processIndentations(rawTokens)
+    phrase(rep1(
+//      exit
+        //      | readInput | callService
+         as | cast | and | or
+        //      | switch | otherwise | colon | arrow
+        //      | equals | comma
+        | literal | identifier
+//        | indentation
+    )) ^^ { rawTokens =>
+            rawTokens
+//      processIndentations(rawTokens)
     }
   }
 
