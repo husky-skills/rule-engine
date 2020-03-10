@@ -109,7 +109,7 @@ object ExpressionParser extends Parsers {
       BINARY("%")
       )
       ~ expr) ^^ {
-      case BINARY(op) ~ ex => BINARYColumn(op, ex)
+      case BINARY(op) ~ ex => OPColumn(op, ex)
     }
   }
 
@@ -127,19 +127,14 @@ object ExpressionParser extends Parsers {
 
   private def column: Parser[ExpressionAST] = positioned {
     (opt(UNARY("!") | BINARY("-")) ~ colIdentifier) ^^ {
-      case Some(UNARY(op)) ~ col => UNARYColumn(op, col)
-      case Some(BINARY(op)) ~ col => UNARYColumn(op, col)
+      case Some(UNARY(op)) ~ col => OPColumn(op, col)
+      case Some(BINARY(op)) ~ col => OPColumn(op, col)
       case None ~ col => col
     }
   }
 
   private def elements: Parser[ExpressionAST] =
-    (opt(UNARY("!") | BINARY("-"))
-      ) ~ (as | cast | in | between | or | and | commaColumn | binary | colIdentifier) ^^ {
-      case Some(UNARY(op)) ~ exp => UNARYColumn(op, exp)
-      case Some(BINARY(op)) ~ exp => UNARYColumn(op, exp)
-      case None ~ exp => exp
-    }
+    (as | cast | in | between | binary | commaColumn | column) ^^ { case exp => exp }
 
   private def aggregator: Parser[(ExpressionAST, ExpressionAST) => ExpressionAST] = success(
     (left: ExpressionAST, right: ExpressionAST) => AndThen(left, right)

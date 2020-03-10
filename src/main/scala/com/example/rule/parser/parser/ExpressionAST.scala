@@ -22,12 +22,7 @@ case class ASColumn(alias: String) extends ExpressionAST
 
 case class CASTColumn(`type`: String) extends ExpressionAST
 
-case class ANDColumn(col: ExpressionAST) extends ExpressionAST
-
-case class BINARYColumn(operator: String, col: ExpressionAST) extends ExpressionAST
-case class UNARYColumn(operator: String, col: ExpressionAST) extends ExpressionAST
-
-case class ORColumn(col: ExpressionAST) extends ExpressionAST
+case class OPColumn(operator: String, col: ExpressionAST) extends ExpressionAST
 
 case class BETWEENColumn(start: ExpressionAST, end: ExpressionAST) extends ExpressionAST
 
@@ -35,8 +30,11 @@ case class INColumn(items: List[ExpressionAST]) extends ExpressionAST
 
 case class COMMAColumn(col: ExpressionAST) extends ExpressionAST
 
-//===============================================
+case class ANDColumn(col: ExpressionAST) extends ExpressionAST
 
+case class ORColumn(col: ExpressionAST) extends ExpressionAST
+
+//===============================================
 
 sealed trait ConditionThen extends Positional {
   def thenBlock: ExpressionAST

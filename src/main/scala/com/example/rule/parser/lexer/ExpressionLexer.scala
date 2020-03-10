@@ -160,6 +160,6 @@ object ExpressionLexer extends RegexParsers {
 
   def unary = positioned {
     //https://regex101.com/r/Wwq3e9/5
-    """(!)|(not)|(-)""".r ^^ (op => UNARY(op))
+    """(!)""".r ^^ (op => UNARY(op))
   }
 }

@@ -42,7 +42,7 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
   test("col1 && col2") {
     val testName = "col1 && col2"
     val ast = ExpressionCompiler(testName)
-    val expect = AndThen(MyColumn("col1"), BINARYColumn("&&", MyColumn("col2")))
+    val expect = AndThen(MyColumn("col1"), OPColumn("&&", MyColumn("col2")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
@@ -50,7 +50,7 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
   test("col1 || col2") {
     val testName = "col1 || col2"
     val ast = ExpressionCompiler(testName)
-    val expect = AndThen(MyColumn("col1"), BINARYColumn("||", MyColumn("col2")))
+    val expect = AndThen(MyColumn("col1"), OPColumn("||", MyColumn("col2")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
@@ -67,9 +67,9 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val expect =
       AndThen(
         MyColumn("col1"),
-        BINARYColumn("&&",
+        OPColumn("&&",
           AndThen(MyColumn("col2"),
-            BINARYColumn("||", MyColumn("col3")))
+            OPColumn("||", MyColumn("col3")))
         ))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
@@ -80,9 +80,9 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val expect =
       AndThen(
         MyColumn("col1"),
-        BINARYColumn("&&",
+        OPColumn("&&",
           AndThen(MyColumn("col2"),
-            BINARYColumn("&&", MyColumn("col3")))))
+            OPColumn("&&", MyColumn("col3")))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
@@ -94,7 +94,7 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
         MyColumn("col1"),
         ASColumn("alias")),
         CASTColumn("boolean")),
-        BINARYColumn("&&", MyColumn("col2")))
+        OPColumn("&&", MyColumn("col2")))
 
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
@@ -130,7 +130,7 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val testName = "col1 not in (10, 20, 30)"
     val ast = ExpressionCompiler(testName)
     val expect =
-      AndThen(MyColumn("col1"), UNARYColumn("not",
+      AndThen(MyColumn("col1"), OPColumn("not",
         INColumn(List(MyColumn("10"), MyColumn("20"), MyColumn("30")))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
@@ -140,7 +140,7 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val testName = "col1 not between (10, 20)"
     val ast = ExpressionCompiler(testName)
     val expect =
-      AndThen(MyColumn("col1"), UNARYColumn("not",
+      AndThen(MyColumn("col1"), OPColumn("not",
         INColumn(List(MyColumn("10"), MyColumn("20"), MyColumn("30")))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
@@ -197,7 +197,7 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val ast = ExpressionCompiler(testName)
     val expect =
       AndThen(
-        UNARYColumn("!",
+        OPColumn("!",
           MyColumn("col1")),
         INColumn(List(MyColumn("10"), MyColumn("20"), MyColumn("30"))))
     if (ast.isLeft) println(ast.left.get.toString)
@@ -209,10 +209,10 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val ast = ExpressionCompiler(testName)
     val expect =
       AndThen(
-        AndThen(UNARYColumn("!",
+        AndThen(OPColumn("!",
           MyColumn("col1")),
           INColumn(List(MyColumn("10"), MyColumn("20"), MyColumn("30"))))
-        , COMMAColumn(UNARYColumn("!", MyColumn("col2"))))
+        , COMMAColumn(OPColumn("!", MyColumn("col2"))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
@@ -222,10 +222,10 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     val expect =
       AndThen(
         AndThen(
-          UNARYColumn("-",
+          OPColumn("-",
             MyColumn("col1")),
           INColumn(List(MyColumn("10"), MyColumn("20"), MyColumn("30"))))
-        , COMMAColumn(UNARYColumn("-", MyColumn("col2"))))
+        , COMMAColumn(OPColumn("-", MyColumn("col2"))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }

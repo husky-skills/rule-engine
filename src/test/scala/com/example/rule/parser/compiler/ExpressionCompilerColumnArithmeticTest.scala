@@ -10,9 +10,9 @@ class ExpressionCompilerColumnArithmeticTest extends org.scalatest.FunSuite with
     val expect =
       AndThen(
         MyColumn("col1"),
-        BINARYColumn("+",
+        OPColumn("+",
           AndThen(MyColumn("col2"),
-            BINARYColumn("-", MyColumn("col3")))
+            OPColumn("-", MyColumn("col3")))
         ))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
@@ -23,8 +23,8 @@ class ExpressionCompilerColumnArithmeticTest extends org.scalatest.FunSuite with
     val ast = ExpressionCompiler(testName)
     val expect =
       AndThen(
-        UNARYColumn("-", MyColumn("col1")),
-        BINARYColumn("-", MyColumn("col2")))
+        OPColumn("-", MyColumn("col1")),
+        OPColumn("-", MyColumn("col2")))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
