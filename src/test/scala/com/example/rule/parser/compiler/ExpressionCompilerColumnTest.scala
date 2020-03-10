@@ -64,25 +64,38 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
   test("col1 && col2 || col3") {
     val testName = "col1 && col2 || col3"
     val ast = ExpressionCompiler(testName)
-    val expect = AndThen(AndThen(MyColumn("col1"), ANDColumn(MyColumn("col2"))), ORColumn(MyColumn("col3")))
+    val expect =
+      AndThen(
+        MyColumn("col1"),
+        ANDColumn(
+          AndThen(MyColumn("col2"),
+            ORColumn(MyColumn("col3")))
+        ))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
   test("col1 && col2 && col3") {
     val testName = "col1 && col2 && col3"
     val ast = ExpressionCompiler(testName)
-    val expect = AndThen(AndThen(MyColumn("col1"), ANDColumn(MyColumn("col2"))), ANDColumn(MyColumn("col3")))
+    val expect =
+      AndThen(
+        MyColumn("col1"),
+        ANDColumn(
+          AndThen(MyColumn("col2"),
+            ANDColumn(MyColumn("col3")))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
   test("col1 as alias cast boolean && col2") {
     val testName = "col1 as alias cast boolean && col2"
     val ast = ExpressionCompiler(testName)
-    val expect = AndThen(AndThen(AndThen(
-      MyColumn("col1"),
-      ASColumn("alias")),
-      CASTColumn("boolean")),
-      ANDColumn(MyColumn("col2")))
+    val expect =
+      AndThen(AndThen(AndThen(
+        MyColumn("col1"),
+        ASColumn("alias")),
+        CASTColumn("boolean")),
+        ANDColumn(MyColumn("col2")))
+
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
@@ -105,35 +118,36 @@ class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers 
     assert(ast.toOption === Some(expect))
   }
   test("between (10 , 20) without any column should fail") {
-    pending
     val testName = "between (10 , 20)"
     val ast = ExpressionCompiler(testName)
-    val expect = BETWEENColumn(MyColumn("10"), MyColumn("20"))
+    val expect = ExpressionParserError(Location(1, 1), "identifier expected")
     if (ast.isLeft) println(ast.left.get.toString)
-    assert(ast.toOption === Some(expect))
+    assert(ast.isLeft)
+    assert(ast.left.get === expect)
   }
 
   test("col1 between (10, 20), col2 as alis") {
     val testName = "col1 between (10, 20), col2 as alis"
     val ast = ExpressionCompiler(testName)
-    val expect = AndThen(AndThen(AndThen(
-      MyColumn("col1"),
-      BETWEENColumn(MyColumn("10"), MyColumn("20"))),
-      COMMAColumn(MyColumn("col2"))), ASColumn("alis"))
+    val expect =
+      AndThen(AndThen(
+        MyColumn("col1"),
+        BETWEENColumn(MyColumn("10"), MyColumn("20"))),
+        COMMAColumn(AndThen(MyColumn("col2"), ASColumn("alis"))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
   test("col1 between (10, 20), col2 as alis, col3 in (100, 200)") {
     val testName = "col1 between (10, 20), col2 as alis, col3 in (100, 200)"
     val ast = ExpressionCompiler(testName)
-    val expect = AndThen(AndThen(AndThen(AndThen(AndThen(
-      MyColumn("col1"), BETWEENColumn(MyColumn("10"), MyColumn("20"))),
-      COMMAColumn(MyColumn("col2"))), ASColumn("alis")),
-      COMMAColumn(MyColumn("col3"))),
-      INColumn(List(MyColumn("100"), MyColumn("200"))))
-
+    val expect =
+      AndThen(
+        AndThen(MyColumn("col1"), BETWEENColumn(MyColumn("10"), MyColumn("20"))),
+        COMMAColumn(AndThen(
+          AndThen(MyColumn("col2"), ASColumn("alis")),
+          COMMAColumn(
+            AndThen(MyColumn("col3"), INColumn(List(MyColumn("100"), MyColumn("200"))))))))
     if (ast.isLeft) println(ast.left.get.toString)
     assert(ast.toOption === Some(expect))
   }
-
 }

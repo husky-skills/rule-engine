@@ -20,7 +20,6 @@ object ExpressionParser extends Parsers {
     override def rest: Reader[ExpressionToken] = new ExpressionTokenReader(tokens.tail)
   }
 
-
   def apply(tokens: Seq[ExpressionToken]): Either[ExpressionParserError, ExpressionAST] = {
     println(s"#### received tokens #####${tokens}")
     val reader: ExpressionTokenReader = new ExpressionTokenReader(tokens)
@@ -35,14 +34,7 @@ object ExpressionParser extends Parsers {
     //    phrase(block)
   }
 
-
-  def expression: Parser[ExpressionAST] = positioned {
-    rep1(
-      in | between |
-        or | and | as | cast | column | commaColumn) ^^ { case expList =>
-      expList reduceLeft AndThen
-    }
-  }
+  def expression: Parser[ExpressionAST] = positioned(expr)
 
   def block: Parser[ExpressionAST] = positioned {
     rep1(statement) ^^ { case stmtList: List[ExpressionAST] =>
@@ -62,9 +54,7 @@ object ExpressionParser extends Parsers {
     val switch = SWITCH() ~ COLON() ~ INDENT() ~ rep1(ifThen) ~ opt(otherwiseThen) ~ DEDENT() ^^ {
       case _ ~ _ ~ _ ~ ifs ~ otherwise ~ _ => Choice(ifs ++ otherwise)
     }
-
     or | and | as | column | exit | readInput | callService | switch
-
   }
 
   def as: Parser[ExpressionAST] = positioned {
@@ -80,13 +70,13 @@ object ExpressionParser extends Parsers {
   }
 
   def and: Parser[ExpressionAST] = positioned {
-    AND() ~ column ^^ {
+    AND() ~ expr ^^ {
       case _ ~ right => ANDColumn(right)
     }
   }
 
   def or: Parser[ORColumn] = positioned {
-    OR() ~ column ^^ {
+    OR() ~ expr ^^ {
       case _ ~ right => ORColumn(right)
     }
   }
@@ -103,9 +93,9 @@ object ExpressionParser extends Parsers {
     }
   }
 
-  def commaColumn: Parser[COMMAColumn] = positioned {
-    (COMMA() ~ identifier) ^^ {
-      case _ ~ IDENTIFIER(name) => COMMAColumn(MyColumn(name))
+  def commaColumn: Parser[ExpressionAST] = positioned {
+    COMMA() ~ expr ^^ {
+      case _ ~ exp => COMMAColumn(exp)
     }
   }
 
@@ -114,6 +104,15 @@ object ExpressionParser extends Parsers {
       case cond ~ _ ~ _ ~ block ~ _ => parser.IfThen(cond, block)
     }
   }
+
+  def elements: Parser[ExpressionAST] = as | cast | in | between | or | and | commaColumn
+
+  def aggregator: Parser[(ExpressionAST, ExpressionAST) => ExpressionAST] = success(
+    (left: ExpressionAST, right: ExpressionAST) => AndThen(left, right)
+  )
+
+  def expr: Parser[ExpressionAST] = chainl1(column, elements, aggregator)
+
 
   def column: Parser[ExpressionAST] = positioned {
     accept("identifier", {
