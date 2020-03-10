@@ -164,6 +164,6 @@ object ExpressionLexer extends RegexParsers {
 
   def notSymbol = positioned {
     //https://regex101.com/r/Wwq3e9/5
-    """(!)""".r ^^ (op => NOTSYM(op))
+    """(!)|(not)""".r ^^ (op => NOTSYM(op))
   }
 }

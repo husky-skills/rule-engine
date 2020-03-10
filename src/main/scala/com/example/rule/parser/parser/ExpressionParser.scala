@@ -82,14 +82,14 @@ object ExpressionParser extends Parsers {
   }
 
   private def in: Parser[INColumn] = positioned {
-    (IN() ~ LEFTPAR() ~ rep1sep(column, COMMA())) ~ RIGHTPAR() ^^ {
-      case _ ~ _ ~ list ~ _ => INColumn(list)
+    (opt(NOTSYM("not")) ~ IN() ~ LEFTPAR() ~ rep1sep(column, COMMA())) ~ RIGHTPAR() ^^ {
+      case _ ~ _ ~ _ ~ list ~ _ => INColumn(list)
     }
   }
 
   private def between: Parser[BETWEENColumn] = positioned {
-    (BETWEEN() ~ LEFTPAR() ~ column ~ COMMA() ~ column ~ RIGHTPAR()) ^^ {
-      case _ ~ _ ~ start ~ _ ~ end ~ _ => BETWEENColumn(start, end)
+    (opt(NOTSYM("not")) ~ BETWEEN() ~ LEFTPAR() ~ column ~ COMMA() ~ column ~ RIGHTPAR()) ^^ {
+      case _ ~ _ ~ _ ~ start ~ _ ~ end ~ _ => BETWEENColumn(start, end)
     }
   }
 
