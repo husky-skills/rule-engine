@@ -110,16 +110,8 @@ object ExpressionParser extends Parsers {
       )
       ~ expr) ^^ {
       case BINARY(op) ~ ex => BINARYColumn(op, ex)
-      case UNARY(op) ~ ex => BINARYColumn(op, ex)
     }
   }
-
-
-  //  private def unaryPostFix: Parser[ExpressionAST] = positioned {
-  //    (expr ~ UNARY("not") ~ expr) ^^ {
-  //      case pre ~ UNARY(op) ~ ex => AndThen(UNARYColumn(op, pre), ex)
-  //    }
-  //  }
 
   private def ifThen: Parser[IfThen] = positioned {
     (condition ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
