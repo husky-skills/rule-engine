@@ -48,3 +48,7 @@ case class AND() extends ExpressionToken
 
 case class OR() extends ExpressionToken
 
+case class BINARY(operator: String) extends ExpressionToken
+
+case class UNARY(operator: String) extends ExpressionToken
+

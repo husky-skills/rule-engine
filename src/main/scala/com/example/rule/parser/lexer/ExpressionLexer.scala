@@ -20,11 +20,13 @@ object ExpressionLexer extends RegexParsers {
     phrase(rep1(
       //      exit
       //      | readInput | callService
-      as | cast | and | or
-        | between | in | comma | leftPar | rightPar
+      as | cast |
+        binary | unary |
+        //        and | or
+        between | in | comma | leftPar | rightPar |
         //      | switch | otherwise | colon | arrow
         //      | equals | comma
-        | literal | identifier
+        literal | identifier
       //        | indentation
     )) ^^ { rawTokens =>
       rawTokens
@@ -149,5 +151,15 @@ object ExpressionLexer extends RegexParsers {
 
   def or = positioned {
     "||" ^^ (_ => OR())
+  }
+
+  def binary = positioned {
+    //https://regex101.com/r/Wwq3e9/4
+    """[\+\-\*\/\%]|(?:\|){2}|(?:\&){2}""".r ^^ (op => BINARY(op))
+  }
+
+  def unary = positioned {
+    //https://regex101.com/r/Wwq3e9/5
+    """(!)|(not)|(-)""".r ^^ (op => UNARY(op))
   }
 }

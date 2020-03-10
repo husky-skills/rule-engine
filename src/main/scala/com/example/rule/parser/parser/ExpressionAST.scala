@@ -24,6 +24,9 @@ case class CASTColumn(`type`: String) extends ExpressionAST
 
 case class ANDColumn(col: ExpressionAST) extends ExpressionAST
 
+case class BINARYColumn(operator: String, col: ExpressionAST) extends ExpressionAST
+case class UNARYColumn(operator: String, col: ExpressionAST) extends ExpressionAST
+
 case class ORColumn(col: ExpressionAST) extends ExpressionAST
 
 case class BETWEENColumn(start: ExpressionAST, end: ExpressionAST) extends ExpressionAST

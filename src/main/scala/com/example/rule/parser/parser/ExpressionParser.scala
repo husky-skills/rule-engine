@@ -2,7 +2,6 @@ package com.example.rule.parser.parser
 
 import com.example.rule.parser.compiler.{ExpressionParserError, Location}
 import com.example.rule.parser.lexer._
-import com.example.rule.parser.parser
 
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.{NoPosition, Position, Reader}
@@ -100,13 +99,55 @@ object ExpressionParser extends Parsers {
     }
   }
 
-  private def ifThen: Parser[IfThen] = positioned {
-    (condition ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
-      case cond ~ _ ~ _ ~ block ~ _ => parser.IfThen(cond, block)
+  private def binary: Parser[ExpressionAST] = positioned {
+    ((BINARY("&&") |
+      BINARY("||") |
+      BINARY("+") |
+      BINARY("-") |
+      BINARY("*") |
+      BINARY("/") |
+      BINARY("%")
+      )
+      ~ expr) ^^ {
+      case BINARY(op) ~ ex => BINARYColumn(op, ex)
+      case UNARY(op) ~ ex => BINARYColumn(op, ex)
     }
   }
 
-  private def elements: Parser[ExpressionAST] = as | cast | in | between | or | and | commaColumn
+
+  //  private def unaryPostFix: Parser[ExpressionAST] = positioned {
+  //    (expr ~ UNARY("not") ~ expr) ^^ {
+  //      case pre ~ UNARY(op) ~ ex => AndThen(UNARYColumn(op, pre), ex)
+  //    }
+  //  }
+
+  private def ifThen: Parser[IfThen] = positioned {
+    (condition ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
+      case cond ~ _ ~ _ ~ block ~ _ => IfThen(cond, block)
+    }
+  }
+
+  private def colIdentifier: Parser[ExpressionAST] = positioned {
+    accept("identifier", {
+      case IDENTIFIER(name) => MyColumn(name)
+    })
+  }
+
+  private def column: Parser[ExpressionAST] = positioned {
+    (opt(UNARY("!") | BINARY("-")) ~ colIdentifier) ^^ {
+      case Some(UNARY(op)) ~ col => UNARYColumn(op, col)
+      case Some(BINARY(op)) ~ col => UNARYColumn(op, col)
+      case None ~ col => col
+    }
+  }
+
+  private def elements: Parser[ExpressionAST] =
+    (opt(UNARY("!") | BINARY("-"))
+      ) ~ (as | cast | in | between | or | and | commaColumn | binary | colIdentifier) ^^ {
+      case Some(UNARY(op)) ~ exp => UNARYColumn(op, exp)
+      case Some(BINARY(op)) ~ exp => UNARYColumn(op, exp)
+      case None ~ exp => exp
+    }
 
   private def aggregator: Parser[(ExpressionAST, ExpressionAST) => ExpressionAST] = success(
     (left: ExpressionAST, right: ExpressionAST) => AndThen(left, right)
@@ -114,12 +155,6 @@ object ExpressionParser extends Parsers {
 
   private def expr: Parser[ExpressionAST] = chainl1(column, elements, aggregator)
 
-
-  private def column: Parser[ExpressionAST] = positioned {
-    accept("identifier", {
-      case IDENTIFIER(name) => MyColumn(name)
-    })
-  }
 
   private def otherwiseThen: Parser[OtherwiseThen] = positioned {
     (OTHERWISE() ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
