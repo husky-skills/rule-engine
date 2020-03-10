@@ -50,5 +50,7 @@ case class OR() extends ExpressionToken
 
 case class BINARY(operator: String) extends ExpressionToken
 
-case class UNARY(operator: String) extends ExpressionToken
+case class MINUS() extends ExpressionToken
+
+case class NOTSYM(operator: String) extends ExpressionToken
 

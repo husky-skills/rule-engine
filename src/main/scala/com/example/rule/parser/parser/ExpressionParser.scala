@@ -99,17 +99,24 @@ object ExpressionParser extends Parsers {
     }
   }
 
+  private def parentheses: Parser[ExpressionAST] = positioned {
+    LEFTPAR() ~ expr ~ RIGHTPAR() ^^ {
+      case _ ~ exp ~ _ => exp
+    }
+  }
+
   private def binary: Parser[ExpressionAST] = positioned {
     ((BINARY("&&") |
       BINARY("||") |
       BINARY("+") |
-      BINARY("-") |
+      MINUS() |
       BINARY("*") |
       BINARY("/") |
       BINARY("%")
       )
       ~ expr) ^^ {
       case BINARY(op) ~ ex => OPColumn(op, ex)
+      case MINUS() ~ ex => OPColumn("-", ex)
     }
   }
 
@@ -126,22 +133,21 @@ object ExpressionParser extends Parsers {
   }
 
   private def column: Parser[ExpressionAST] = positioned {
-    (opt(UNARY("!") | BINARY("-")) ~ colIdentifier) ^^ {
-      case Some(UNARY(op)) ~ col => OPColumn(op, col)
-      case Some(BINARY(op)) ~ col => OPColumn(op, col)
+    (opt(NOTSYM("!") | MINUS()) ~ colIdentifier) ^^ {
+      case Some(NOTSYM(op)) ~ col => OPColumn(op, col)
+      case Some(MINUS()) ~ col => OPColumn("-", col)
       case None ~ col => col
     }
   }
 
   private def elements: Parser[ExpressionAST] =
-    (as | cast | in | between | binary | commaColumn | column) ^^ { case exp => exp }
+    (as | cast | in | between | binary | commaColumn | parentheses) ^^ { case exp => exp }
 
   private def aggregator: Parser[(ExpressionAST, ExpressionAST) => ExpressionAST] = success(
     (left: ExpressionAST, right: ExpressionAST) => AndThen(left, right)
   )
 
-  private def expr: Parser[ExpressionAST] = chainl1(column, elements, aggregator)
-
+  private def expr: Parser[ExpressionAST] = chainl1(column | parentheses, elements, aggregator)
 
   private def otherwiseThen: Parser[OtherwiseThen] = positioned {
     (OTHERWISE() ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {

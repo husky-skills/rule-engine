@@ -20,8 +20,8 @@ object ExpressionLexer extends RegexParsers {
     phrase(rep1(
       //      exit
       //      | readInput | callService
-      as | cast |
-        binary | unary |
+      as | cast | minus | notSymbol |
+        binary |
         //        and | or
         between | in | comma | leftPar | rightPar |
         //      | switch | otherwise | colon | arrow
@@ -155,11 +155,15 @@ object ExpressionLexer extends RegexParsers {
 
   def binary = positioned {
     //https://regex101.com/r/Wwq3e9/4
-    """[\+\-\*\/\%]|(?:\|){2}|(?:\&){2}""".r ^^ (op => BINARY(op))
+    """[\+\*\/\%]|(?:\|){2}|(?:\&){2}""".r ^^ (op => BINARY(op))
   }
 
-  def unary = positioned {
+  def minus = positioned {
+    "-" ^^ (_ => MINUS())
+  }
+
+  def notSymbol = positioned {
     //https://regex101.com/r/Wwq3e9/5
-    """(!)""".r ^^ (op => UNARY(op))
+    """(!)""".r ^^ (op => NOTSYM(op))
   }
 }
