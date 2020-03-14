@@ -29,7 +29,7 @@ object ExpressionParser extends Parsers {
   }
 
   def program: Parser[ExpressionAST] = positioned {
-    phrase(expression)
+    phrase(rule | expression)
     //    phrase(block)
   }
 
@@ -51,7 +51,7 @@ object ExpressionParser extends Parsers {
       case call ~ LITERAL(serviceName) => CallService(serviceName)
     }
     val switch = SWITCH() ~ COLON() ~ INDENT() ~ rep1(ifThen) ~ opt(otherwiseThen) ~ DEDENT() ^^ {
-      case _ ~ _ ~ _ ~ ifs ~ otherwise ~ _ => Choice(ifs ++ otherwise)
+      case _ ~ _ ~ _ ~ ifs ~ otherwise ~ _ => ChoiceOld(ifs ++ otherwise)
     }
     or | and | as | column | exit | readInput | callService | switch
   }
@@ -120,11 +120,6 @@ object ExpressionParser extends Parsers {
     }
   }
 
-  private def ifThen: Parser[IfThen] = positioned {
-    (condition ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
-      case cond ~ _ ~ _ ~ block ~ _ => IfThen(cond, block)
-    }
-  }
 
   private def colIdentifier: Parser[ExpressionAST] = positioned {
     accept("identifier", {
@@ -140,6 +135,10 @@ object ExpressionParser extends Parsers {
     }
   }
 
+  private def arrow: Parser[ExpressionAST] = positioned {
+    ARROW() ^^ { case _ => End }
+  }
+
   private def elements: Parser[ExpressionAST] =
     (as | cast | in | between | binary | commaColumn | parentheses) ^^ { case exp => exp }
 
@@ -149,15 +148,77 @@ object ExpressionParser extends Parsers {
 
   private def expr: Parser[ExpressionAST] = chainl1(column | parentheses, elements, aggregator)
 
-  private def otherwiseThen: Parser[OtherwiseThen] = positioned {
-    (OTHERWISE() ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
-      case _ ~ _ ~ _ ~ block ~ _ => OtherwiseThen(block)
+  private def rule: Parser[ExpressionAST] = positioned {
+    def nameClause: Parser[ExpressionAST] =
+      (NAME() ~ COLON() ~ identifier) ^^ {
+        case _ ~ _ ~ IDENTIFIER(name) => MyColumn(name)
+      }
+
+    def givenGetClause =
+      ((GIVEN() | GET()) ~ COLON() ~ expr) ^^ {
+        case _ ~ _ ~ exp => exp
+      }
+
+    def whenClause =
+      (opt(WHEN() ~ COLON()) ~ expr ~ ARROW() ~ INDENT()) ^^ {
+        case _ ~ exp ~ _ ~ _ => exp
+      }
+
+    def thenClause =
+      (opt(THEN() ~ COLON()) ~ expr ~ DEDENT()) ^^ {
+        case _ ~ exp ~ _ => exp
+      }
+
+    def otherwiseClause =
+      (opt(OTHERWISE() ~ COLON()) ~ expr) ^^ {
+        case _ ~ exp => exp
+      }
+
+    def caseClause: Parser[Choice] =
+      (MATCH_CASE() ~ COLON() ~ INDENT() ~
+        rep1(whenClause ~ thenClause) ~
+        opt(otherwiseClause)
+        ~ DEDENT()
+        ) ^^ {
+        case _ ~ _ ~ _ ~ cases ~ Some(other) ~ _ => {
+          Choice(
+            cases.map { case w ~ t => WhenThen(w, t) }
+              :+ OtherwiseThen(other))
+        }
+        case _ ~ _ ~ _ ~ cases ~ None ~ _ => {
+          Choice(cases.map { case w ~ t => WhenThen(w, t) })
+        }
+      }
+
+
+    def nestedRules: Parser[ExpressionAST] =
+      opt((RULES() ~ COLON() ~ rep(rule))) ^^ {
+        case Some(_ ~ _ ~ rules) => (rules :+ End) reduceRight AndThen
+        case None => End
+      }
+
+    (nameClause ~ givenGetClause ~ caseClause ~ nestedRules ~ givenGetClause) ^^ {
+      case name ~ given ~ caseC ~ rules ~ get =>
+        Rule(name, caseC, rules, given, get)
     }
   }
 
-  private def condition: Parser[Equals] = positioned {
+  private def ifThen: Parser[IfThenOld] = positioned {
+    (condition ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
+      case cond ~ _ ~ _ ~ block ~ _ => IfThenOld(cond, block)
+    }
+  }
+
+
+  private def otherwiseThen: Parser[OtherwiseThenOld] = positioned {
+    (OTHERWISE() ~ ARROW() ~ INDENT() ~ block ~ DEDENT()) ^^ {
+      case _ ~ _ ~ _ ~ block ~ _ => OtherwiseThenOld(block)
+    }
+  }
+
+  private def condition: Parser[EqualsOld] = positioned {
     (identifier ~ EQUALS() ~ literal) ^^ {
-      case IDENTIFIER(id) ~ eq ~ LITERAL(lit) => Equals(id, lit)
+      case IDENTIFIER(id) ~ eq ~ LITERAL(lit) => EqualsOld(id, lit)
     }
   }
 

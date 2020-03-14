@@ -44,14 +44,14 @@ class ExpressionCompilerSpec extends AnyFlatSpec with Matchers {
 
   val successfulAST = AndThen(
     ReadInput(List("name", "country")),
-    Choice(List(
-      IfThen(Equals("country", "PT"), AndThen(CallService("A"), Exit)),
-      OtherwiseThen(
+    ChoiceOld(List(
+      IfThenOld(EqualsOld("country", "PT"), AndThen(CallService("A"), Exit)),
+      OtherwiseThenOld(
         AndThen(
           CallService("B"),
-          Choice(List(
-            IfThen(Equals("name", "unknown"), Exit),
-            OtherwiseThen(AndThen(CallService("C"), Exit))
+          ChoiceOld(List(
+            IfThenOld(EqualsOld("name", "unknown"), Exit),
+            OtherwiseThenOld(AndThen(CallService("C"), Exit))
           ))
         )
       )

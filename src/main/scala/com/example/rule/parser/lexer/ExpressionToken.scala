@@ -54,3 +54,16 @@ case class MINUS() extends ExpressionToken
 
 case class NOTSYM(operator: String) extends ExpressionToken
 
+case class NAME() extends ExpressionToken
+
+case class GIVEN() extends ExpressionToken
+
+case class GET() extends ExpressionToken
+
+case class MATCH_CASE() extends ExpressionToken
+
+case class RULES() extends ExpressionToken
+
+case class WHEN() extends ExpressionToken
+
+case class THEN() extends ExpressionToken

@@ -24,13 +24,14 @@ object ExpressionLexer extends RegexParsers {
         binary |
         //        and | or
         between | in | comma | leftPar | rightPar |
-        //      | switch | otherwise | colon | arrow
+        name_clause | given_clause | get_clause | rules_clause |
+        case_clause | when_clause | then_clause | otherwise | colon | arrow | indentation
         //      | equals | comma
-        literal | identifier
-      //        | indentation
+        | literal | identifier
+
     )) ^^ { rawTokens =>
-      rawTokens
-      //      processIndentations(rawTokens)
+      //      rawTokens
+      processIndentations(rawTokens)
     }
   }
 
@@ -101,17 +102,6 @@ object ExpressionLexer extends RegexParsers {
     "switch" ^^ (_ => SWITCH())
   }
 
-  def otherwise = positioned {
-    "otherwise" ^^ (_ => OTHERWISE())
-  }
-
-  def colon = positioned {
-    ":" ^^ (_ => COLON())
-  }
-
-  def arrow = positioned {
-    "->" ^^ (_ => ARROW())
-  }
 
   def equals = positioned {
     "==" ^^ (_ => EQUALS())
@@ -165,5 +155,44 @@ object ExpressionLexer extends RegexParsers {
   def notSymbol = positioned {
     //https://regex101.com/r/Wwq3e9/5
     """(!)|(not)""".r ^^ (op => NOTSYM(op))
+  }
+
+  def name_clause = positioned {
+    "name" ^^ (_ => NAME())
+  }
+
+  def given_clause = positioned {
+    "given" ^^ (_ => GIVEN())
+  }
+
+  def get_clause = positioned {
+    "get" ^^ (_ => GET())
+  }
+
+  def case_clause = positioned {
+    "case" ^^ (_ => MATCH_CASE())
+  }
+
+  def when_clause = positioned {
+    "when" ^^ (_ => WHEN())
+  }
+
+  def then_clause = positioned {
+    "then" ^^ (_ => THEN())
+  }
+  def rules_clause = positioned {
+    "rules" ^^ (_ => RULES())
+  }
+
+  def otherwise = positioned {
+    "otherwise" ^^ (_ => OTHERWISE())
+  }
+
+  def colon = positioned {
+    ":" ^^ (_ => COLON())
+  }
+
+  def arrow = positioned {
+    "=>" ^^ (_ => ARROW())
   }
 }
