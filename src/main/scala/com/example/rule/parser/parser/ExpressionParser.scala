@@ -148,6 +148,8 @@ object ExpressionParser extends Parsers {
 
   private def expr: Parser[ExpressionAST] = chainl1(column | parentheses, elements, aggregator)
 
+  private def rulesss: Parser[ExpressionAST] = chainl1(rule, aggregator)
+
   private def rule: Parser[ExpressionAST] = positioned {
     def nameClause: Parser[ExpressionAST] =
       (NAME() ~ COLON() ~ identifier) ^^ {
@@ -155,8 +157,9 @@ object ExpressionParser extends Parsers {
       }
 
     def givenGetClause =
-      ((GIVEN() | GET()) ~ COLON() ~ expr) ^^ {
-        case _ ~ _ ~ exp => exp
+      opt((GIVEN() | GET()) ~ COLON() ~ expr) ^^ {
+        case Some(_ ~ _ ~ exp) => exp
+        case None => End
       }
 
     def whenClause =
@@ -190,17 +193,33 @@ object ExpressionParser extends Parsers {
         }
       }
 
+    //    def nestedRules: Parser[ExpressionAST] =
+    //      opt(RULES() ~ COLON() ~ INDENT() ~ rep(rule)) ^^ {
+    //        case Some(_ ~ _ ~ _ ~ rules) => (rules :+ End) reduceRight AndThen
+    //        case None => End
+    //      }
 
-    def nestedRules: Parser[ExpressionAST] =
-      opt((RULES() ~ COLON() ~ rep(rule))) ^^ {
-        case Some(_ ~ _ ~ rules) => (rules :+ End) reduceRight AndThen
+    def nestedRules2: Parser[ExpressionAST] =
+      opt(RULES() ~ COLON() ~ INDENT() ~ rulesss) ^^ {
+        case Some(_ ~ _ ~ _ ~ rules) => rules
         case None => End
       }
 
-    (nameClause ~ givenGetClause ~ caseClause ~ nestedRules ~ givenGetClause) ^^ {
-      case name ~ given ~ caseC ~ rules ~ get =>
-        Rule(name, caseC, rules, given, get)
+    def first = (nameClause ~ givenGetClause ~ caseClause ~ nestedRules2 ~ givenGetClause) ^^ {
+      case name ~ given ~ caseC ~ nested ~ get =>
+        Rule(name, caseC, nested, given, get)
     }
+
+    def elems = nestedRules2 ~ givenGetClause
+
+    def concat(): Parser[(Rule, ExpressionAST ~ ExpressionAST) => Rule] = success {
+      (half: Rule, secondHalf: ExpressionAST ~ ExpressionAST) =>
+        secondHalf match {
+          case nested ~ get => half.copy(rules = nested, getClause = get)
+        }
+    }
+
+    chainl1(first, elems, concat) | success(End)
   }
 
   private def ifThen: Parser[IfThenOld] = positioned {
