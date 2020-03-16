@@ -29,7 +29,7 @@ object ExpressionParser extends Parsers {
   }
 
   def program: Parser[ExpressionAST] = positioned {
-    phrase(rule | expression)
+    phrase(expression | rule)
     //    phrase(block)
   }
 
@@ -161,6 +161,9 @@ object ExpressionParser extends Parsers {
         case Some(_ ~ _ ~ exp) => exp
         case None => End
       }
+    //      (GIVEN() | GET()) ~ COLON() ~ expr ^^ {
+    //        case _ ~ _ ~ exp => exp
+    //      }
 
     def whenClause =
       (opt(WHEN() ~ COLON()) ~ expr ~ ARROW() ~ INDENT()) ^^ {
@@ -199,9 +202,11 @@ object ExpressionParser extends Parsers {
     //        case None => End
     //      }
 
+    def r = (INDENT() ~ rulesss) ^^ { case _ ~ rr => rr }
+
     def nestedRules2: Parser[ExpressionAST] =
-      opt(RULES() ~ COLON() ~ INDENT() ~ rulesss) ^^ {
-        case Some(_ ~ _ ~ _ ~ rules) => rules
+      opt(RULES() ~ COLON() ~ (r | success(End)) ~ DEDENT()) ^^ {
+        case Some(_ ~ _ ~ rules ~ _) => rules
         case None => End
       }
 
