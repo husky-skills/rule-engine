@@ -1,9 +1,10 @@
 package com.example.rule.parser.compiler
 
 import com.example.rule.parser.parser._
+import com.example.rule.util.config.BetterEither
 import org.scalatest.matchers.must.Matchers
 
-class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers {
+class ExpressionCompilerColumnTest extends org.scalatest.FunSuite with Matchers with BetterEither{
   //column testing testing
   test("col1 as alias") {
     val testName = "col1 as alias"

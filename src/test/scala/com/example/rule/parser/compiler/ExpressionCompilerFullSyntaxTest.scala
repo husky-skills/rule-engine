@@ -1,9 +1,10 @@
 package com.example.rule.parser.compiler
 
 import com.example.rule.parser.parser._
+import com.example.rule.util.config.BetterEither
 import org.scalatest.matchers.must.Matchers
 
-class ExpressionCompilerFullSyntaxTest extends org.scalatest.FunSuite with Matchers {
+class ExpressionCompilerFullSyntaxTest extends org.scalatest.FunSuite with Matchers with BetterEither {
   test("full rule") {
     val rule1 =
       """|name: rule_identity

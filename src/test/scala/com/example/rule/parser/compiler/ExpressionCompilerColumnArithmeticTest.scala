@@ -1,12 +1,13 @@
 package com.example.rule.parser.compiler
 
 import com.example.rule.parser.parser._
+import com.example.rule.util.config.BetterEither
 import org.scalatest.matchers.must.Matchers
 
-class ExpressionCompilerColumnArithmeticTest extends org.scalatest.FunSuite with Matchers {
+class ExpressionCompilerColumnArithmeticTest extends org.scalatest.FunSuite with Matchers with BetterEither {
   test("col1 + col2 - col3") {
     val testName = "col1 + col2 - col3"
-    val ast = ExpressionCompiler(testName)
+    val ast: Either[ExpressionCompilationError, ExpressionAST] = ExpressionCompiler(testName)
     val expect =
       AndThen(
         MyColumn("col1"),
