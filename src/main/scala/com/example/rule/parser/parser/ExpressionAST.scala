@@ -80,4 +80,4 @@ case class OtherwiseThen(thenBlock: ExpressionAST) extends ConditionThen
 
 case class GroupBy(grouped: List[GroupExpr], by: ExpressionAST) extends ExpressionAST
 
-case class GroupExpr(fun: String, expressionAST: ExpressionAST)
+case class GroupExpr(fun: String, alias: String, expressionAST: ExpressionAST)

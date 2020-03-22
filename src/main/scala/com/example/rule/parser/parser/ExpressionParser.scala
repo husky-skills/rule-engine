@@ -163,12 +163,12 @@ object ExpressionParser extends Parsers {
       }
 
     def whenClause =
-      (opt(WHEN() ~ COLON()) ~ expr ~ ARROW() ~ INDENT()) ^^ {
+      (opt(WHEN() ~ COLON()) ~ (expr | groupByClause) ~ ARROW() ~ INDENT()) ^^ {
         case _ ~ exp ~ _ ~ _ => exp
       }
 
     def thenClause =
-      (opt(THEN() ~ COLON()) ~ expr ~ DEDENT()) ^^ {
+      (opt(THEN() ~ COLON()) ~ (expr | groupByClause) ~ DEDENT()) ^^ {
         case _ ~ exp ~ _ => exp
       }
 
@@ -197,8 +197,9 @@ object ExpressionParser extends Parsers {
     def groupFuns = GROUP_FUNCTION("sum") | GROUP_FUNCTION("min") | GROUP_FUNCTION("max") | GROUP_FUNCTION("avg")
 
     def groupExpr =
-      (groupFuns ~ expr) ^^ {
-        case GROUP_FUNCTION(function) ~ exp => GroupExpr(function, exp)
+      (groupFuns ~ LEFTPAR() ~ expr ~ RIGHTPAR() ~ as) ^^ {
+        case GROUP_FUNCTION(function) ~ _ ~ exp ~ _ ~ ASColumn(name) =>
+          GroupExpr(function, name, exp)
       }
 
     def groupByClause = {
