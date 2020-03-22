@@ -73,180 +73,180 @@ object ExpressionLexer extends RegexParsers {
     }
   }
 
-  def identifier: Parser[IDENTIFIER] = positioned {
+  private def identifier: Parser[IDENTIFIER] = positioned {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
     //      todo: remove identifier starting with numbers
     //    "[a-zA-Z0-9_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
   }
 
-  def literal: Parser[LITERAL] = positioned {
+  private def literal: Parser[LITERAL] = positioned {
     """("[^"]*")|('[^']*')""".r ^^ { str =>
       val content = str.substring(1, str.length - 1)
       LITERAL(content.toString)
     }
   }
 
-  def doubleLiteral = positioned {
+  private def doubleLiteral = positioned {
     //ref: https://regex101.com/r/Z2eK1k/1
     """(?i)([0-9]+(?:\.[0-9]+d?)|(?:\.?[0-9]+d))""".r ^^ { str =>
       VALUE_LITERAL(str.toDouble)
     }
   }
 
-  def dateLiteral = positioned {
+  private def dateLiteral = positioned {
     """(\d\d)\/(\d\d)\/(\d\d\d\d)""".r ^^ { str =>
       val dateFormat = new SimpleDateFormat("dd/MM/yyyy")
       VALUE_LITERAL(new Timestamp(dateFormat.parse(str).getTime))
     }
   }
 
-  def longLiteral = positioned {
+  private def longLiteral = positioned {
     "(?i)([0-9]+l?)".r ^^ { str =>
       VALUE_LITERAL(str.toLong)
     }
   }
 
-  def boolLiteral: Parser[VALUE_LITERAL] = positioned {
+  private def boolLiteral: Parser[VALUE_LITERAL] = positioned {
     val boolTrue = """(?i)(t(?:rue)?)|(y(?:es)?)""".r ^^ (_ => VALUE_LITERAL(true))
     val boolFalse = """(?i)(f(?:alse)?)|(n(?:o)?)""".r ^^ (_ => VALUE_LITERAL(false))
     boolTrue | boolFalse
   }
 
-  def indentation: Parser[INDENTATION] = positioned {
+  private def indentation: Parser[INDENTATION] = positioned {
     "\n[ ]*".r ^^ { whitespace =>
       val nSpaces = whitespace.length - 1
       INDENTATION(nSpaces)
     }
   }
 
-  def exit = positioned {
+  private def exit = positioned {
     "exit" ^^ (_ => EXIT())
   }
 
-  def readInput = positioned {
+  private def readInput = positioned {
     "read input" ^^ (_ => READINPUT())
   }
 
-  def callService = positioned {
+  private def callService = positioned {
     "call service" ^^ (_ => CALLSERVICE())
   }
 
-  def switch = positioned {
+  private def switch = positioned {
     "switch" ^^ (_ => SWITCH())
   }
 
 
-  def equals = positioned {
+  private def equals = positioned {
     "==" ^^ (_ => EQUALS())
   }
 
-  def between = positioned {
+  private def between = positioned {
     "between" ^^ (_ => BETWEEN())
   }
 
-  def in = positioned {
+  private def in = positioned {
     "in" ^^ (_ => IN())
   }
 
-  def leftPar = positioned {
+  private def leftPar = positioned {
     "(" ^^ (_ => LEFTPAR())
   }
 
-  def rightPar = positioned {
+  private def rightPar = positioned {
     ")" ^^ (_ => RIGHTPAR())
   }
 
-  def comma = positioned {
+  private def comma = positioned {
     "," ^^ (_ => COMMA())
   }
 
-  def as = positioned {
+  private def as = positioned {
     "as" ^^ (_ => AS())
   }
 
-  def cast = positioned {
+  private def cast = positioned {
     "cast" ^^ (_ => CAST())
   }
 
-  def and = positioned {
+  private def and = positioned {
     "&&" ^^ (_ => AND())
   }
 
-  def or = positioned {
+  private def or = positioned {
     "||" ^^ (_ => OR())
   }
 
-  def binary = positioned {
+  private def binary = positioned {
     //https://regex101.com/r/Wwq3e9/4
     """[\+\*\/\%]|(?:\|){2}|(?:\&){2}""".r ^^ (op => BINARY(op))
   }
 
-  def minus = positioned {
+  private def minus = positioned {
     "-" ^^ (_ => MINUS())
   }
 
-  def notSymbol = positioned {
+  private def notSymbol = positioned {
     //https://regex101.com/r/Wwq3e9/5
     """(!)|(not)""".r ^^ (op => NOTSYM(op))
   }
 
-  def name_clause = positioned {
+  private def name_clause = positioned {
     "name" ^^ (_ => NAME())
   }
 
-  def given_clause = positioned {
+  private def given_clause = positioned {
     "given" ^^ (_ => GIVEN())
   }
 
-  def get_clause = positioned {
+  private def get_clause = positioned {
     "get" ^^ (_ => GET())
   }
 
-  def case_clause = positioned {
+  private def case_clause = positioned {
     "case" ^^ (_ => MATCH_CASE())
   }
 
-  def when_clause = positioned {
+  private def when_clause = positioned {
     "when" ^^ (_ => WHEN())
   }
 
-  def then_clause = positioned {
+  private def then_clause = positioned {
     "then" ^^ (_ => THEN())
   }
 
-  def rules_clause = positioned {
+  private def rules_clause = positioned {
     "rules" ^^ (_ => RULES())
   }
 
-  def otherwise = positioned {
+  private def otherwise = positioned {
     "otherwise" ^^ (_ => OTHERWISE())
   }
 
-  def colon = positioned {
+  private def colon = positioned {
     ":" ^^ (_ => COLON())
   }
 
-  def arrow = positioned {
+  private def arrow = positioned {
     "=>" ^^ (_ => ARROW())
   }
 
-  def group = positioned {
+  private def group = positioned {
     "group" ^^ (_ => GROUP())
   }
 
-  def groupFunction = positioned {
+  private def groupFunction = positioned {
     "(sum)|(min)|(max)|(avg)".r ^^ (f => GROUP_FUNCTION(f))
   }
 
-  def by = positioned {
+  private def by = positioned {
     "by" ^^ (_ => BY())
   }
 
-  def let = positioned {
+  private def let = positioned {
     "let".r ^^ (_ => LET())
   }
 
-  def be = positioned {
+  private def be = positioned {
     "be" ^^ (_ => BE())
   }
 }
