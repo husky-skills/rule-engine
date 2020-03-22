@@ -1,5 +1,8 @@
 package com.example.rule.parser.lexer
 
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+
 import com.example.rule.parser.compiler.{ExpressionLexerError, Location}
 
 import scala.util.parsing.combinator.RegexParsers
@@ -23,11 +26,15 @@ object ExpressionLexer extends RegexParsers {
       as | cast | minus | notSymbol |
         binary |
         //        and | or
+        group | groupFunction | by |
+
         between | in | comma | leftPar | rightPar |
         name_clause | given_clause | get_clause | rules_clause |
         case_clause | when_clause | then_clause | otherwise | colon | arrow | indentation
         //      | equals | comma
-        | literal | identifier
+        | let | be
+        | dateLiteral | doubleLiteral | longLiteral | boolLiteral | literal |
+        identifier
 
     )) ^^ { rawTokens =>
       //      rawTokens
@@ -67,16 +74,42 @@ object ExpressionLexer extends RegexParsers {
   }
 
   def identifier: Parser[IDENTIFIER] = positioned {
-    //    "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
-    //  todo: remove identifier starting with numbers
-    "[a-zA-Z0-9_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
+    "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
+    //      todo: remove identifier starting with numbers
+    //    "[a-zA-Z0-9_][a-zA-Z0-9_]*".r ^^ { str => IDENTIFIER(str) }
   }
 
   def literal: Parser[LITERAL] = positioned {
-    """"[^"]*"""".r ^^ { str =>
+    """("[^"]*")|('[^']*')""".r ^^ { str =>
       val content = str.substring(1, str.length - 1)
-      LITERAL(content)
+      LITERAL(content.toString)
     }
+  }
+
+  def doubleLiteral = positioned {
+    //ref: https://regex101.com/r/Z2eK1k/1
+    """(?i)([0-9]+(?:\.[0-9]+d?)|(?:\.?[0-9]+d))""".r ^^ { str =>
+      VALUE_LITERAL(str.toDouble)
+    }
+  }
+
+  def dateLiteral = positioned {
+    """(\d\d)\/(\d\d)\/(\d\d\d\d)""".r ^^ { str =>
+      val dateFormat = new SimpleDateFormat("dd/MM/yyyy")
+      VALUE_LITERAL(new Timestamp(dateFormat.parse(str).getTime))
+    }
+  }
+
+  def longLiteral = positioned {
+    "(?i)([0-9]+l?)".r ^^ { str =>
+      VALUE_LITERAL(str.toLong)
+    }
+  }
+
+  def boolLiteral: Parser[VALUE_LITERAL] = positioned {
+    val boolTrue = """(?i)(t(?:rue)?)|(y(?:es)?)""".r ^^ (_ => VALUE_LITERAL(true))
+    val boolFalse = """(?i)(f(?:alse)?)|(n(?:o)?)""".r ^^ (_ => VALUE_LITERAL(false))
+    boolTrue | boolFalse
   }
 
   def indentation: Parser[INDENTATION] = positioned {
@@ -180,6 +213,7 @@ object ExpressionLexer extends RegexParsers {
   def then_clause = positioned {
     "then" ^^ (_ => THEN())
   }
+
   def rules_clause = positioned {
     "rules" ^^ (_ => RULES())
   }
@@ -194,5 +228,25 @@ object ExpressionLexer extends RegexParsers {
 
   def arrow = positioned {
     "=>" ^^ (_ => ARROW())
+  }
+
+  def group = positioned {
+    "group" ^^ (_ => GROUP())
+  }
+
+  def groupFunction = positioned {
+    "(sum)|(min)|(max)|(avg)".r ^^ (f => GROUP_FUNCTION(f))
+  }
+
+  def by = positioned {
+    "by" ^^ (_ => BY())
+  }
+
+  def let = positioned {
+    "let".r ^^ (_ => LET())
+  }
+
+  def be = positioned {
+    "be" ^^ (_ => BE())
   }
 }

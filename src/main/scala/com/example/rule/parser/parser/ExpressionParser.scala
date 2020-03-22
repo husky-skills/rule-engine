@@ -81,15 +81,17 @@ object ExpressionParser extends Parsers {
     }
   }
 
-  private def in: Parser[INColumn] = positioned {
+  private def in: Parser[ExpressionAST] = positioned {
     (opt(NOTSYM("not")) ~ IN() ~ LEFTPAR() ~ rep1sep(column, COMMA())) ~ RIGHTPAR() ^^ {
-      case _ ~ _ ~ _ ~ list ~ _ => INColumn(list)
+      case Some(_) ~ _ ~ _ ~ list ~ _ => OPColumn("not", INColumn(list))
+      case None ~ _ ~ _ ~ list ~ _ => INColumn(list)
     }
   }
 
-  private def between: Parser[BETWEENColumn] = positioned {
+  private def between: Parser[ExpressionAST] = positioned {
     (opt(NOTSYM("not")) ~ BETWEEN() ~ LEFTPAR() ~ column ~ COMMA() ~ column ~ RIGHTPAR()) ^^ {
-      case _ ~ _ ~ _ ~ start ~ _ ~ end ~ _ => BETWEENColumn(start, end)
+      case Some(_) ~ _ ~ _ ~ start ~ _ ~ end ~ _ => OPColumn("not", BETWEENColumn(start, end))
+      case None ~ _ ~ _ ~ start ~ _ ~ end ~ _ => BETWEENColumn(start, end)
     }
   }
 
@@ -128,7 +130,7 @@ object ExpressionParser extends Parsers {
   }
 
   private def column: Parser[ExpressionAST] = positioned {
-    (opt(NOTSYM("!") | MINUS()) ~ colIdentifier) ^^ {
+    (opt(NOTSYM("!") | MINUS()) ~ (colIdentifier | letBeClause | litColumn)) ^^ {
       case Some(NOTSYM(op)) ~ col => OPColumn(op, col)
       case Some(MINUS()) ~ col => OPColumn("-", col)
       case None ~ col => col
@@ -191,6 +193,20 @@ object ExpressionParser extends Parsers {
         }
       }
 
+
+    def groupFuns = GROUP_FUNCTION("sum") | GROUP_FUNCTION("min") | GROUP_FUNCTION("max") | GROUP_FUNCTION("avg")
+
+    def groupExpr =
+      (groupFuns ~ expr) ^^ {
+        case GROUP_FUNCTION(function) ~ exp => GroupExpr(function, exp)
+      }
+
+    def groupByClause = {
+      (GROUP() ~ rep1(groupExpr) ~ BY() ~ expr) ^^ {
+        case _ ~ groups ~ _ ~ exp => GroupBy(groups, exp)
+      }
+    }
+
     def nestedRules: Parser[ExpressionAST] =
       opt(RULES() ~ COLON() ~ INDENT() ~ rep1(rule) ~ DEDENT()) ^^ {
         case Some(_ ~ _ ~ rules ~ _) => (rules :+ End) reduceRight AndThen
@@ -228,5 +244,23 @@ object ExpressionParser extends Parsers {
 
   private def literal: Parser[LITERAL] = positioned {
     accept("string literal", { case lit@LITERAL(name) => lit })
+  }
+
+  private def anyLiteral =
+    accept("string, double, long, date literal", {
+      case lit@VALUE_LITERAL(value) => value
+      case lit@LITERAL(value) => value
+    })
+
+  private def litColumn =
+    accept("string, double, long, date literal", {
+      case lit@VALUE_LITERAL(value) => LitMyColumn(value)
+      case lit@LITERAL(value) => LitMyColumn(value)
+    })
+
+  private def letBeClause: Parser[ExpressionAST] = positioned {
+    (LET() ~ identifier ~ BE() ~ (anyLiteral | expr)) ^^ {
+      case _ ~ IDENTIFIER(column) ~ _ ~ value => LetMyColumn(column, value)
+    }
   }
 }

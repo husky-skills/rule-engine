@@ -8,6 +8,8 @@ case class IDENTIFIER(str: String) extends ExpressionToken
 
 case class LITERAL(str: String) extends ExpressionToken
 
+case class VALUE_LITERAL(value: Any) extends ExpressionToken
+
 case class INDENTATION(spaces: Int) extends ExpressionToken
 
 case class EXIT() extends ExpressionToken
@@ -67,3 +69,13 @@ case class RULES() extends ExpressionToken
 case class WHEN() extends ExpressionToken
 
 case class THEN() extends ExpressionToken
+
+case class GROUP() extends ExpressionToken
+
+case class GROUP_FUNCTION(function: String) extends ExpressionToken
+
+case class BY() extends ExpressionToken
+
+case class LET() extends ExpressionToken
+
+case class BE() extends ExpressionToken

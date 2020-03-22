@@ -19,11 +19,17 @@ case object Exit extends ExpressionAST
 
 case class MyColumn(name: String) extends ExpressionAST
 
+case class LetMyColumn(name: String, value: Any) extends ExpressionAST
+
+case class LitMyColumn(value: Any) extends ExpressionAST
+
 case class ASColumn(alias: String) extends ExpressionAST
 
 case class CASTColumn(`type`: String) extends ExpressionAST
 
 case class OPColumn(operator: String, col: ExpressionAST) extends ExpressionAST
+
+case class OPColumnAndArgs(operator: String, args: List[Any], col: ExpressionAST) extends ExpressionAST
 
 case class BETWEENColumn(start: ExpressionAST, end: ExpressionAST) extends ExpressionAST
 
@@ -71,3 +77,7 @@ sealed trait ConditionThen extends Positional {
 case class WhenThen(predicate: ExpressionAST, thenBlock: ExpressionAST) extends ConditionThen
 
 case class OtherwiseThen(thenBlock: ExpressionAST) extends ConditionThen
+
+case class GroupBy(grouped: List[GroupExpr], by: ExpressionAST) extends ExpressionAST
+
+case class GroupExpr(fun: String, expressionAST: ExpressionAST)
